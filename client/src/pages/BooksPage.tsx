@@ -11,7 +11,7 @@ export default function BooksPage() {
   const [editingBookId, setEditingBookId] = useState<number | null>(null); // 👈 new state
 
   const fetchBooks = async () => {
-    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/books`);
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/books/`);
     setBooks(res.data as Book[]);
   };
 
@@ -26,7 +26,7 @@ export default function BooksPage() {
     if (!title || !author || !releaseYear) return;
 
     try {
-      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/books`, {
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/books/`, {
         title,
         author,
         releaseYear,
@@ -39,15 +39,15 @@ export default function BooksPage() {
 };
 
   const updateBook = async (id: number, data: Partial<Book>) => {
-    await axios.put(`${import.meta.env.VITE_API_BASE_URL}/books/${id}`, data);
-    fetchBooks();
-    resetForm();
-  };
+  await axios.put(`${import.meta.env.VITE_API_BASE_URL}/books/${id}/`, data);
+  fetchBooks();
+  resetForm();
+};
 
   const deleteBook = async (id: number) => {
-    await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/books/${id}`);
-    fetchBooks();
-  };
+  await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/books/${id}/`);
+  fetchBooks();
+};
 
   const handleSubmit = () => {
     if (editingBookId !== null) {
