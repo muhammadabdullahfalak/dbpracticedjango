@@ -10,8 +10,11 @@ export default function BooksPage() {
 
   const [editingBookId, setEditingBookId] = useState<number | null>(null); // 👈 new state
 
+  const baseUrl=import.meta.env.VITE_API_BASE_URL
+
   const fetchBooks = async () => {
-    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/books/`);
+    
+    const res = await axios.get(`${baseUrl}/books/`);
     setBooks(res.data as Book[]);
   };
 
@@ -26,7 +29,7 @@ export default function BooksPage() {
     if (!title || !author || !releaseYear) return;
 
     try {
-      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/books/`, {
+      await axios.post(`${baseUrl}/books/`, {
         title,
         author,
         releaseYear,
@@ -39,13 +42,13 @@ export default function BooksPage() {
 };
 
   const updateBook = async (id: number, data: Partial<Book>) => {
-  await axios.put(`${import.meta.env.VITE_API_BASE_URL}/books/${id}/`, data);
+  await axios.put(`${baseUrl}/books/${id}/`, data);
   fetchBooks();
   resetForm();
 };
 
   const deleteBook = async (id: number) => {
-  await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/books/${id}/`);
+  await axios.delete(`${baseUrl}/books/${id}/`);
   fetchBooks();
 };
 
