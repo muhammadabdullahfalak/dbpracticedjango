@@ -60,9 +60,12 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
+   'DEFAULT_AUTHENTICATION_CLASSES': (
+       # allow DRF to see Django’s session cookie
+       'rest_framework.authentication.SessionAuthentication',
+       # then fall back to JWT if you send an access token
+       'rest_framework_simplejwt.authentication.JWTAuthentication',
+   ),
 }
 
 SOCIALACCOUNT_PROVIDERS = {
@@ -178,3 +181,11 @@ CORS_ALLOWED_ORIGINS = [
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
 ]
+
+# Allow session and CSRF cookies to be sent from localhost:5173 → 127.0.0.1:8000
+SESSION_COOKIE_SAMESITE = None
+CSRF_COOKIE_SAMESITE    = None
+
+# In development we’re on HTTP, not HTTPS
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE    = False

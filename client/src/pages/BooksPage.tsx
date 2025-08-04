@@ -2,47 +2,28 @@
 // import type { Book } from "../types/types";
 // import { useDispatch, useSelector } from "react-redux";
 // import type { AppDispatch, RootState } from "../store/store";
-// import { fetchAllBooks } from "../store/slices/bookSlice";
+// import {
+//   fetchAllBooks,
+//   addBook as addBookThunk,
+//   updateBook as updateBookThunk,
+//   deleteBook as deleteBookThunk,
+// } from "../store/slices/bookSlice";
 
 // export default function BooksPage() {
-
 //   const dispatch = useDispatch<AppDispatch>();
 //   const books = useSelector((state: RootState) => state.book.books);
 
-//   const fetchBooks = () => {
-//     dispatch(fetchAllBooks());
-//   };
-
-//   const addBook = (title: string, author: string, releaseYear: number) => {
-//     dispatch({
-//       type: 'book/addBook',
-//       payload: { title, author, releaseYear }
-//     });
-//   };
-
-//   const updateBook = (id: number, updatedBook: Partial<Book>) => {
-//     dispatch({
-//       type: 'book/updateBook',
-//       payload: { id, ...updatedBook }
-//     });
-//   };
-
-//   const deleteBook = (id: number) => {
-//     dispatch({
-//       type: 'book/deleteBook',
-//       payload: id
-//     });
-//   };
-
-//   // State for form inputs
-
-//   const [title, setTitle] = useState<string>("");
-//   const [author, setAuthor] = useState<string>("");
+//   const [title, setTitle] = useState("");
+//   const [author, setAuthor] = useState("");
 //   const [releaseYear, setReleaseYear] = useState<number>(new Date().getFullYear());
+//   const [editingBookId, setEditingBookId] = useState<number | null>(null);
 
-//   const [editingBookId, setEditingBookId] = useState<number | null>(null); // 👈 new state
 
-  
+
+
+//   useEffect(() => {
+//     dispatch(fetchAllBooks());
+//   }, [dispatch]);
 
 //   const resetForm = () => {
 //     setTitle("");
@@ -52,17 +33,25 @@
 //   };
 
 //   const handleSubmit = () => {
+//     if (!title || !author || !releaseYear) return;
+
+//     const book: Book = {
+//       id: editingBookId || 0, // id ignored for new book on backend
+//       title,
+//       author,
+//       releaseYear,
+//     };
+
 //     if (editingBookId !== null) {
-//       updateBook(editingBookId, { title, author, releaseYear });
-//       resetForm();
+//       dispatch(updateBookThunk(book));
 //     } else {
-//       addBook(title, author, releaseYear);
-//       resetForm();
+//       dispatch(addBookThunk(book));
 //     }
+//     resetForm();
 //   };
 
 //   const handleDelete = (id: number) => {
-//     deleteBook(id);
+//     dispatch(deleteBookThunk(id));
 //     resetForm();
 //   };
 
@@ -72,10 +61,6 @@
 //     setReleaseYear(book.releaseYear);
 //     setEditingBookId(book.id);
 //   };
-
-//   useEffect(() => {
-//     fetchBooks();
-//   }, []);
 
 //   return (
 //     <div className="p-4">
@@ -104,18 +89,12 @@
 //           onChange={(e) => setReleaseYear(Number(e.target.value))}
 //         />
 
-//         <button
-//           onClick={handleSubmit}
-//           className="bg-blue-500 text-white px-3 py-1 rounded"
-//         >
+//         <button onClick={handleSubmit} className="bg-blue-500 text-white px-3 py-1 rounded">
 //           {editingBookId ? "Update Book" : "Add Book"}
 //         </button>
 
 //         {editingBookId && (
-//           <button
-//             onClick={resetForm}
-//             className="bg-gray-500 text-white px-3 py-1 rounded"
-//           >
+//           <button onClick={resetForm} className="bg-gray-500 text-white px-3 py-1 rounded">
 //             Cancel
 //           </button>
 //         )}
@@ -149,7 +128,8 @@
 //                 >
 //                   Edit
 //                 </button>
-//                 <button className="bg-red-500 text-white px-2 py-1 rounded"
+//                 <button
+//                   className="bg-red-500 text-white px-2 py-1 rounded"
 //                   onClick={() => handleDelete(book.id)}
 //                 >
 //                   Delete
@@ -163,6 +143,8 @@
 //   );
 // }
 
+
+// client/src/pages/BooksPage.tsx
 import { useEffect, useState } from "react";
 import type { Book } from "../types/types";
 import { useDispatch, useSelector } from "react-redux";
@@ -173,18 +155,22 @@ import {
   updateBook as updateBookThunk,
   deleteBook as deleteBookThunk,
 } from "../store/slices/bookSlice";
+import { logout } from "../store/slices/authSlice";
+import { useNavigate } from "react-router-dom";
 
 export default function BooksPage() {
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
+
+  // grab books from Redux
   const books = useSelector((state: RootState) => state.book.books);
 
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
-  const [releaseYear, setReleaseYear] = useState<number>(new Date().getFullYear());
+  const [releaseYear, setReleaseYear] = useState<number>(
+    new Date().getFullYear()
+  );
   const [editingBookId, setEditingBookId] = useState<number | null>(null);
-
-
-
 
   useEffect(() => {
     dispatch(fetchAllBooks());
@@ -201,7 +187,7 @@ export default function BooksPage() {
     if (!title || !author || !releaseYear) return;
 
     const book: Book = {
-      id: editingBookId || 0, // id ignored for new book on backend
+      id: editingBookId || 0,
       title,
       author,
       releaseYear,
@@ -227,10 +213,28 @@ export default function BooksPage() {
     setEditingBookId(book.id);
   };
 
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/login", { replace: true });
+  };
+
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-2">{editingBookId ? "Edit Book" : "Add Book"}</h2>
+      {/* Header with Logout */}
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Book Management</h1>
+        <button
+          onClick={handleLogout}
+          className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
+        >
+          Logout
+        </button>
+      </div>
 
+      {/* Form */}
+      <h2 className="text-xl font-bold mb-2">
+        {editingBookId ? "Edit Book" : "Add Book"}
+      </h2>
       <div className="mb-4 space-x-2">
         <input
           type="text"
@@ -254,22 +258,26 @@ export default function BooksPage() {
           onChange={(e) => setReleaseYear(Number(e.target.value))}
         />
 
-        <button onClick={handleSubmit} className="bg-blue-500 text-white px-3 py-1 rounded">
+        <button
+          onClick={handleSubmit}
+          className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition"
+        >
           {editingBookId ? "Update Book" : "Add Book"}
         </button>
 
         {editingBookId && (
-          <button onClick={resetForm} className="bg-gray-500 text-white px-3 py-1 rounded">
+          <button
+            onClick={resetForm}
+            className="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600 transition"
+          >
             Cancel
           </button>
         )}
       </div>
 
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold">Book List</h3>
-      </div>
-
-      <table className="border border-black w-full mt-4">
+      {/* List */}
+      <h3 className="text-lg font-semibold mb-2">Book List</h3>
+      <table className="border border-black w-full">
         <thead>
           <tr>
             <th className="border p-2">ID</th>
@@ -288,13 +296,13 @@ export default function BooksPage() {
               <td className="border p-2">{book.releaseYear}</td>
               <td className="border p-2 space-x-2">
                 <button
-                  className="bg-blue-500 text-white px-2 py-1 rounded"
+                  className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition"
                   onClick={() => handleEditClick(book)}
                 >
                   Edit
                 </button>
                 <button
-                  className="bg-red-500 text-white px-2 py-1 rounded"
+                  className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition"
                   onClick={() => handleDelete(book.id)}
                 >
                   Delete
